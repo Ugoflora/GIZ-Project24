@@ -276,8 +276,8 @@ def main():
             st.markdown('</div>', unsafe_allow_html=True)
 
     # Custom footer
-    st.markdown('<div class="footer">GIZ Training Portal © 2024</div>', unsafe_allow_html=True)
-    st.sidebar.markdown('<div class="sidebar-footer">Designer: Advanced Python Class 2024</div>', unsafe_allow_html=True)
+    st.markdown('<div class="footer">GIZ Trainees Portal © 2024</div>', unsafe_allow_html=True)
+    st.sidebar.markdown('<div class="sidebar-footer">Advanced Python Class 2024 Project</div>', unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
