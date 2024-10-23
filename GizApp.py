@@ -63,8 +63,8 @@ def validate_account_number(account_number):
 # Admin login function
 def admin_login():
     st.title("Admin Login")
-    username = st.text_input("Enter Admin Username")
-    password = st.text_input("Enter Admin Password", type="password")
+    username = st.text_input("Admin Username")
+    password = st.text_input("Admin Password", type="password")
     
     if st.button("Login"):
         if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
@@ -233,7 +233,7 @@ def main():
         st.session_state.logged_in = False
 
     # Sidebar for navigation
-    menu = st.sidebar.selectbox("Click the dropdown to register", ["Trainee Registration", "Admin Login"])
+    menu = st.sidebar.selectbox("Click to register", ["Trainee Registration", "Admin Login"])
 
     # Add video in the sidebar and loop it
     video_file = open("TechWorld3.mp4", "rb")
