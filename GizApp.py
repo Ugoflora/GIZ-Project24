@@ -63,7 +63,6 @@ def register_student():
             Database.addStudent(connection, fname, lname, email, phone_number, course, bank_name, account_number, gender, reg_date)
             st.success(f"{fname} {lname} Registered Successfully!")
 
-
 # Admin-specific functions
 def view_students():
     st.header("View All Students")
@@ -196,7 +195,7 @@ def main():
     # Sidebar for navigation
     menu = st.sidebar.selectbox("Click the dropdown to register", ["Trainee Registration", "Admin Login"])
 
-     # Add video in the sidebar and loop it
+    # Add video in the sidebar and loop it
     video_file = open("TechWorld3.mp4", "rb")
     st.sidebar.video(video_file, start_time=0)  # Replay from the start automatically
 
@@ -222,12 +221,22 @@ def main():
             st.markdown('<div class="content">', unsafe_allow_html=True)
             admin_login()
             st.markdown('</div>', unsafe_allow_html=True)
-    
-    # Sidebar footer
-    st.sidebar.markdown('<div class="sidebar-footer"> Advanced Python Class 2024 Project </div>', unsafe_allow_html=True)
+        else:
+            # Show admin dashboard functionalities one after another
+            admin_action = st.sidebar.selectbox("Admin Actions", ["View Students", "Search Student by Name", "Delete Student", "Edit Student Details"])
+            
+            if admin_action == "View Students":
+                view_students()
+            elif admin_action == "Search Student by Name":
+                search_student_by_name()
+            elif admin_action == "Delete Student":
+                delete_student()
+            elif admin_action == "Edit Student Details":
+                edit_student_details()
 
-    # Custom footer for main content
-    st.markdown('<div class="footer">GIZ Trainee Portal © 2024</div>', unsafe_allow_html=True)
+    # Sidebar footer
+    st.sidebar.markdown('<div class="sidebar-footer">Designer: Advanced Python Class 2024</div>', unsafe_allow_html=True)
+    st.markdown('<div class="footer">GIZ Training Portal © 2024</div>', unsafe_allow_html=True)
 
 if __name__ == '__main__':
     main()
