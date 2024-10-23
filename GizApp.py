@@ -229,5 +229,5 @@ def main():
     # Custom footer for main content
     st.markdown('<div class="footer">GIZ Trainee Portal © 2024</div>', unsafe_allow_html=True)
 
-if __name__ == '_main_':
+if __name__ == '__main__':
     main()
