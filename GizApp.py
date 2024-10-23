@@ -1,12 +1,49 @@
+
 import streamlit as st
-import Database  # Assuming Database.py exists in your project directory
+import sqlite3
+import pandas as pd
 from datetime import datetime
 import re  # For email validation
 from PIL import Image  # Importing PIL to handle images
 
 # Set up the database connection
-connection = Database.createConnectDatabase()
-Database.createTable(connection)
+def create_connection():
+    return sqlite3.connect("Reg.db")
+
+def create_table(connection):
+    with connection:
+        connection.execute('''CREATE TABLE IF NOT EXISTS students (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            first_name TEXT,
+                            last_name TEXT,
+                            email TEXT,
+                            phone_number TEXT,
+                            course TEXT,
+                            bank_name TEXT,
+                            account_number TEXT,
+                            gender TEXT,
+                            reg_date TEXT)''')
+
+def add_student(connection, fname, lname, email, phone_number, course, bank_name, account_number, gender, reg_date):
+    with connection:
+        connection.execute('''INSERT INTO students (first_name, last_name, email, phone_number, course, bank_name, account_number, gender, reg_date) 
+                              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''', 
+                              (fname, lname, email, phone_number, course, bank_name, account_number, gender, reg_date))
+
+def view_students(connection):
+    return pd.read_sql("SELECT * FROM students", connection)
+
+def view_student_by_name(connection, name):
+    return pd.read_sql(f"SELECT * FROM students WHERE first_name = ?", connection, params=(name,))
+
+def delete_student(connection, student_id):
+    with connection:
+        connection.execute("DELETE FROM students WHERE id = ?", (student_id,))
+
+def edit_student(connection, column, new_value, student_id):
+    with connection:
+        connection.execute(f"UPDATE students SET {column} = ? WHERE id = ?", (new_value, student_id))
+
 
 # Admin credentials (for simplicity, hardcoded)
 ADMIN_USERNAME = "Rep2"
@@ -37,7 +74,7 @@ def admin_login():
             st.error("Invalid credentials! Please try again.")
 
 # Student registration function
-def register_student():
+def register_student(connection):
     st.header("Trainee Registration Form")
 
     fname = st.text_input("First Name").capitalize()
@@ -60,21 +97,20 @@ def register_student():
         elif not validate_account_number(account_number):
             st.error("Account number must be exactly 10 digits.")
         else:
-            Database.addStudent(connection, fname, lname, email, phone_number, course, bank_name, account_number, gender, reg_date)
-            st.success(f"{fname} {lname} Registered Successfully!")
+            add_student(connection, fname, lname, email, phone_number, course, bank_name, account_number, gender, reg_date)
+            st.success(f"{fname} {lname}, Registered Successfully!")
 
 # Admin-specific functions
-def view_students():
+def view_students_action(connection):
     st.header("View All Students")
-    students = Database.viewStudents(connection)
+    students = view_students(connection)
     
-    if students:
-        for student in students:
-            st.write(f"{student[0]} | {student[1]} {student[2]} | {student[3]} | {student[4]} | {student[5]} | {student[6]} | {student[7]} | {student[8]} | {student[9]}")
+    if not students.empty:
+        st.dataframe(students)
     else:
         st.write("No students registered yet.")
 
-def search_student_by_name():
+def search_student_by_name_action(connection):
     st.header("Search Student by Name")
     name = st.text_input("Enter Student First Name")
     
@@ -82,14 +118,13 @@ def search_student_by_name():
         if not name:
             st.error("Please enter a name to search.")
         else:
-            students = Database.viewStudentByName(connection, name)
-            if students:
-                for student in students:
-                    st.write(f"{student[0]} | {student[1]} {student[2]} | {student[3]} | {student[4]} | {student[5]} | {student[6]} | {student[7]} | {student[8]} | {student[9]}")
+            students = view_student_by_name(connection, name)
+            if not students.empty:
+                st.dataframe(students)
             else:
                 st.write("No student found with this name.")
 
-def delete_student():
+def delete_student_action(connection):
     st.header("Delete a Student")
     student_id = st.text_input("Enter the ID of the student you want to delete")
     
@@ -99,12 +134,12 @@ def delete_student():
         else:
             confirmation = st.checkbox("Are you sure?")
             if confirmation:
-                Database.deleteStudent(connection, student_id)
+                delete_student(connection, student_id)
                 st.success(f"Student ID {student_id} successfully deleted!")
             else:
                 st.warning("Deletion cancelled.")
 
-def edit_student_details():
+def edit_student_details_action(connection):
     st.header("Edit Student Details")
     student_id = st.text_input("Enter the Student ID to edit")
     column_to_edit = st.selectbox("What would you like to edit?", ["First Name", "Last Name", "Email", "Phone Number", "Course", "Bank Name", "Account Number", "Gender"])
@@ -126,11 +161,16 @@ def edit_student_details():
                 "Account Number": "account_number",
                 "Gender": "gender"
             }
-            Database.editDetail(connection, column_map[column_to_edit], new_value, student_id)
+            edit_student(connection, column_map[column_to_edit], new_value, student_id)
             st.success(f"{column_to_edit} updated successfully!")
+
 
 # Main function to handle the navigation
 def main():
+    # Set up the database connection
+    connection = create_connection()
+    create_table(connection)
+
     # Sidebar background color and footer
     st.markdown(
         """
@@ -207,7 +247,7 @@ def main():
             st.error(f"Error loading student image: {e}")
         
         st.markdown('<div class="content">', unsafe_allow_html=True)
-        register_student()
+        register_student(connection)
         st.markdown('</div>', unsafe_allow_html=True)
 
     elif menu == "Admin Login":
@@ -218,25 +258,26 @@ def main():
             except Exception as e:
                 st.error(f"Error loading admin image: {e}")
             
-            st.markdown('<div class="content">', unsafe_allow_html=True)
             admin_login()
-            st.markdown('</div>', unsafe_allow_html=True)
-        else:
-            # Show admin dashboard functionalities one after another
-            admin_action = st.sidebar.selectbox("Admin Actions", ["View Students", "Search Student by Name", "Delete Student", "Edit Student Details"])
-            
-            if admin_action == "View Students":
-                view_students()
+
+        if st.session_state.logged_in:
+            st.markdown('<div class="content">', unsafe_allow_html=True)
+            admin_action = st.sidebar.radio("Admin Actions", ["View All Students", "Search Student by Name", "Delete Student", "Edit Student Details"])
+
+            if admin_action == "View All Students":
+                view_students_action(connection)
             elif admin_action == "Search Student by Name":
-                search_student_by_name()
+                search_student_by_name_action(connection)
             elif admin_action == "Delete Student":
-                delete_student()
+                delete_student_action(connection)
             elif admin_action == "Edit Student Details":
-                edit_student_details()
+                edit_student_details_action(connection)
 
-    # Sidebar footer
-    st.sidebar.markdown('<div class="sidebar-footer">Designer: Advanced Python Class 2024</div>', unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+
+    # Custom footer
     st.markdown('<div class="footer">GIZ Training Portal © 2024</div>', unsafe_allow_html=True)
+    st.sidebar.markdown('<div class="sidebar-footer">Designer: Advanced Python Class 2024</div>', unsafe_allow_html=True)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
