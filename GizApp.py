@@ -168,7 +168,7 @@ def edit_student_details_action(connection):
 repeating_text_sidebar = """
 <div style="text-align:center;">
     <p id="tech-text" style="font-size: 24px; font-weight: bold; color: #FF0000;"> Welcome!</p>
-    <p id="tech-text" style="font-size: 18px; font-style: italic; font-family: cursive; color:  #006400;">Register, learn and evolve with tech....</p>
+    <p id="tech-text" style="font-size: 18px; font-style: italic; font-family: brush script; color:  #006400;">Register, learn and evolve with tech....</p>
 </div>
 <script type="text/javascript">
     var textElement = document.getElementById("tech-text");
