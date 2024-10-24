@@ -164,6 +164,23 @@ def edit_student_details_action(connection):
             edit_student(connection, column_map[column_to_edit], new_value, student_id)
             st.success(f"{column_to_edit} updated successfully!")
 
+# HTML and JavaScript for repeating text in the sidebar
+repeating_text_sidebar = """
+<div style="text-align:center;">
+    <p id="tech-text" style="font-size: 24px; font-weight: bold; color: #FF0000;"> Welcome!</p>
+    <p id="tech-text" style="font-size: 18px; font-style: italic; font-family: cursive; color:  #006400;">Register, learn and evolve with tech....</p>
+</div>
+<script type="text/javascript">
+    var textElement = document.getElementById("tech-text");
+    setInterval(function() {
+        textElement.innerHTML = "Welcome!;
+        textElement.innerHTML = Register, learn and evolve with tech....";
+    }, 5000);  // Repeat every 5 seconds
+</script>
+"""
+
+# Display the repeating text in the sidebar
+st.sidebar.markdown(repeating_text_sidebar, unsafe_allow_html=True)
 
 # Main function to handle the navigation
 def main():
